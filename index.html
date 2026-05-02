@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alex Mercer — Video Editor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sf:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Inter','Helvetica Neue',sans-serif;
+  --c1:#0A0015;--c2:#0D0022;--c3:#100028;
+  --violet:#7B2FFF;--violet2:#9B5FFF;--violet3:#C4A0FF;
+  --cyan:#00E5FF;--cyan2:#00B8CC;--cyan3:#80F0FF;
+  --rose:#FF2D78;--rose2:#FF6BA8;
+  --gold:#FFD700;--gold2:#FFA500;
+  --white:#FFFFFF;--off:#E8E0FF;--muted:#8B80B0;--dimmed:#4A4570;
+  --glass:rgba(255,255,255,0.04);--glass2:rgba(255,255,255,0.08);
+  --border:rgba(123,47,255,0.25);--border2:rgba(0,229,255,0.3);
+  --glow-v:rgba(123,47,255,0.5);--glow-c:rgba(0,229,255,0.4);
+}
+html{scroll-behavior:smooth}
+body{background:var(--c1);color:var(--white);font-family:var(--sf);font-weight:700;overflow-x:hidden;cursor:none}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#000}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--violet),var(--cyan))}
+
+/* BG */
+.bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);animation:drift 18s ease-in-out infinite alternate}
+.orb1{width:700px;height:700px;background:radial-gradient(circle,rgba(123,47,255,.35),transparent 70%);top:-200px;left:-200px;animation-duration:20s}
+.orb2{width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,255,.2),transparent 70%);bottom:-100px;right:-100px;animation-duration:25s;animation-delay:-8s}
+.orb3{width:500px;height:500px;background:radial-gradient(circle,rgba(255,45,120,.15),transparent 70%);top:40%;left:40%;animation-duration:30s;animation-delay:-15s}
+.orb4{width:400px;height:400px;background:radial-gradient(circle,rgba(255,215,0,.1),transparent 70%);top:60%;left:10%;animation-duration:22s;animation-delay:-5s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,-40px) scale(1.1)}100%{transform:translate(-30px,60px) scale(.95)}}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(123,47,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,255,.04) 1px,transparent 1px);background-size:80px 80px}
+
+/* CURSOR */
+#cur{position:fixed;width:12px;height:12px;border-radius:50%;background:var(--cyan);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 20px var(--cyan),0 0 40px rgba(0,229,255,.4);transition:transform .3s}
+#cur-ring{position:fixed;width:40px;height:40px;border:1.5px solid rgba(0,229,255,.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .15s ease}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:20px 56px;display:flex;justify-content:space-between;align-items:center;background:rgba(10,0,21,.7);backdrop-filter:blur(24px);border-bottom:1px solid rgba(123,47,255,.15);transition:background .4s}
+.nav-logo{font-size:20px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,var(--violet3),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 12px rgba(0,229,255,.4))}
+.nav-links{display:flex;gap:36px;align-items:center}
+.nav-links a{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s}
+.nav-links a:hover{color:var(--cyan);text-shadow:0 0 16px rgba(0,229,255,.6)}
+.nav-cta{padding:9px 22px;background:linear-gradient(135deg,var(--violet),var(--cyan2));font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;border:none;border-radius:100px;cursor:none;box-shadow:0 4px 24px rgba(123,47,255,.5);transition:all .3s;text-decoration:none}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(123,47,255,.7)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 56px;padding-top:100px;position:relative;z-index:10;overflow:hidden}
+.hero-tag{display:inline-flex;align-items:center;gap:10px;padding:8px 20px;background:rgba(123,47,255,.12);border:1px solid rgba(123,47,255,.35);border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--violet3);margin-bottom:36px;width:fit-content;opacity:0;animation:slideIn .7s .1s forwards}
+.hero-tag::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-title{font-size:clamp(56px,8.5vw,128px);font-weight:900;line-height:.95;letter-spacing:-.04em;margin-bottom:8px;opacity:0;animation:slideIn .8s .25s forwards}
+.hero-title .line1{display:block;background:linear-gradient(135deg,#ffffff 0%,#C4A0FF 50%,#ffffff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 32px rgba(196,160,255,.4))}
+.hero-title .line2{display:block;background:linear-gradient(135deg,var(--cyan) 0%,var(--violet2) 50%,var(--cyan3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 40px rgba(0,229,255,.5))}
+.hero-title .line3{display:block;background:linear-gradient(135deg,var(--rose2),var(--gold),var(--rose2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 32px rgba(255,45,120,.4));background-size:200%;animation:shimmer 3s linear infinite,slideIn .8s .35s forwards;opacity:0}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.hero-role{font-size:13px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:28px;opacity:0;animation:slideIn .8s .45s forwards}
+.hero-desc{max-width:480px;font-size:16px;line-height:1.75;font-weight:400;color:rgba(232,224,255,.6);margin-bottom:52px;opacity:0;animation:slideIn .8s .55s forwards;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.hero-desc strong{color:var(--violet3);font-weight:700}
+.hero-actions{display:flex;gap:20px;align-items:center;opacity:0;animation:slideIn .8s .65s forwards}
+.btn-primary{display:inline-flex;align-items:center;gap:12px;padding:16px 36px;border-radius:100px;background:linear-gradient(135deg,var(--violet),var(--cyan2));font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fff;text-decoration:none;box-shadow:0 8px 32px rgba(123,47,255,.55);transition:all .35s}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(123,47,255,.7)}
+.btn-primary .arrow{width:18px;height:18px;border:2px solid rgba(255,255,255,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px}
+.btn-outline{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:100px;border:1.5px solid rgba(123,47,255,.4);background:rgba(123,47,255,.08);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--violet3);text-decoration:none;transition:all .35s;backdrop-filter:blur(10px)}
+.btn-outline:hover{border-color:var(--violet);background:rgba(123,47,255,.18);transform:translateY(-3px)}
+.hero-right{position:absolute;right:56px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:16px;opacity:0;animation:slideIn .9s .75s forwards}
+.stat-pill{padding:16px 24px;background:var(--glass2);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);display:flex;align-items:center;gap:16px;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)}
+.stat-pill .icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.icon-v{background:linear-gradient(135deg,rgba(123,47,255,.3),rgba(0,229,255,.2));box-shadow:0 4px 16px rgba(123,47,255,.3)}
+.icon-c{background:linear-gradient(135deg,rgba(0,229,255,.3),rgba(123,47,255,.2));box-shadow:0 4px 16px rgba(0,229,255,.3)}
+.icon-r{background:linear-gradient(135deg,rgba(255,45,120,.3),rgba(255,165,0,.2));box-shadow:0 4px 16px rgba(255,45,120,.3)}
+.stat-pill .num{font-size:22px;font-weight:900;letter-spacing:-.03em;line-height:1;text-shadow:0 2px 12px rgba(123,47,255,.5)}
+.stat-pill .lbl{font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
+
+/* MARQUEE */
+.marquee-wrap{position:relative;z-index:10;padding:24px 0;overflow:hidden;background:linear-gradient(135deg,rgba(123,47,255,.08),rgba(0,229,255,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.marquee{display:flex;animation:marquee 22s linear infinite;white-space:nowrap}
+.m-item{display:flex;align-items:center;gap:28px;padding:0 40px;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dimmed)}
+.m-num{font-size:26px;font-weight:900;letter-spacing:-.03em;background:linear-gradient(135deg,var(--violet2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 8px rgba(123,47,255,.4))}
+.m-sep{width:4px;height:4px;background:linear-gradient(var(--violet),var(--cyan));border-radius:50%;flex-shrink:0}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* SECTIONS */
+section{padding:120px 56px;position:relative;z-index:10}
+.s-badge{display:inline-flex;align-items:center;gap:12px;padding:7px 18px;margin-bottom:32px;background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.25);border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--violet3)}
+.s-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:linear-gradient(var(--violet),var(--cyan))}
+.s-title{font-size:clamp(38px,5vw,68px);font-weight:900;line-height:1;letter-spacing:-.04em;margin-bottom:16px;text-shadow:0 4px 40px rgba(123,47,255,.3)}
+.s-title .g1{background:linear-gradient(135deg,#fff,var(--violet3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s-title .g2{background:linear-gradient(135deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s-sub{font-size:15px;font-weight:400;color:rgba(232,224,255,.5);line-height:1.8;max-width:520px}
+
+/* WORK */
+.work-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:64px}
+.work-card{position:relative;border-radius:24px;overflow:hidden;border:1px solid rgba(123,47,255,.2);transition:transform .4s cubic-bezier(.23,1,.32,1),box-shadow .4s;cursor:none}
+.work-card:first-child{grid-row:span 2;min-height:600px}
+.work-card:hover{transform:translateY(-8px) scale(1.01);box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 40px rgba(123,47,255,.2)}
+.work-visual{width:100%;min-height:300px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.work-card:first-child .work-visual{position:absolute;inset:0;min-height:100%}
+.vf-1{background:linear-gradient(135deg,#0D0033 0%,#1A0050 30%,#000D2E 60%,#0A001F 100%)}
+.vf-2{background:linear-gradient(135deg,#001A1F 0%,#003040 40%,#001020 100%)}
+.vf-3{background:linear-gradient(135deg,#1A0010 0%,#2D0020 40%,#0A0015 100%)}
+.film-frame{position:absolute;inset:0;overflow:hidden}
+.ff-glow1{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(123,47,255,.4),transparent 70%);top:-80px;right:-80px;filter:blur(40px)}
+.ff-glow2{position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,255,.3),transparent 70%);bottom:-60px;left:-60px;filter:blur(40px)}
+.ff-glow3{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,45,120,.3),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(60px)}
+.ff-lines{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.015) 3px,rgba(255,255,255,.015) 4px)}
+.ff-corner{position:absolute;width:24px;height:24px;border-color:rgba(0,229,255,.6);border-style:solid}
+.ff-corner.tl{top:16px;left:16px;border-width:2px 0 0 2px}
+.ff-corner.tr{top:16px;right:16px;border-width:2px 2px 0 0}
+.ff-corner.bl{bottom:16px;left:16px;border-width:0 0 2px 2px}
+.ff-corner.br{bottom:16px;right:16px;border-width:0 2px 2px 0}
+.work-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,0,21,.97) 0%,rgba(10,0,21,.5) 50%,transparent 100%);opacity:0;transition:opacity .5s;display:flex;flex-direction:column;justify-content:flex-end;padding:32px}
+.work-card:hover .work-overlay,.work-card:first-child .work-overlay{opacity:1}
+.work-tag2{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;margin-bottom:12px;width:fit-content;background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.3);border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan)}
+.work-name2{font-size:28px;font-weight:900;line-height:1.1;letter-spacing:-.03em;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,.8),0 0 30px rgba(123,47,255,.3)}
+.work-meta2{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.1em}
+.play-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(123,47,255,.2);backdrop-filter:blur(8px);border:1.5px solid rgba(123,47,255,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:all .4s;box-shadow:0 0 30px rgba(123,47,255,.4),0 0 60px rgba(0,229,255,.2)}
+.play-ring svg{width:18px;height:18px;fill:var(--cyan);margin-left:4px;filter:drop-shadow(0 0 8px var(--cyan))}
+.work-card:hover .play-ring{opacity:1}
+
+/* SERVICES */
+.services-bg{background:linear-gradient(180deg,rgba(123,47,255,.04) 0%,rgba(0,229,255,.02) 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:64px}
+.svc-card{padding:40px 36px;border-radius:24px;background:linear-gradient(135deg,rgba(123,47,255,.08),rgba(0,229,255,.04));border:1px solid rgba(123,47,255,.2);position:relative;overflow:hidden;transition:all .4s cubic-bezier(.23,1,.32,1)}
+.svc-card::before{content:'';position:absolute;inset:0;border-radius:24px;background:linear-gradient(135deg,rgba(123,47,255,.12),transparent);opacity:0;transition:opacity .4s}
+.svc-card:hover{transform:translateY(-8px);border-color:rgba(0,229,255,.4);box-shadow:0 24px 60px rgba(0,0,0,.4),0 0 30px rgba(123,47,255,.15)}
+.svc-card:hover::before{opacity:1}
+.svc-icon{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,rgba(123,47,255,.25),rgba(0,229,255,.15));border:1px solid rgba(123,47,255,.35);display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 8px 24px rgba(123,47,255,.25)}
+.svc-icon svg{width:24px;height:24px;stroke:var(--cyan3);fill:none;stroke-width:1.8;filter:drop-shadow(0 0 6px var(--cyan2))}
+.svc-num{position:absolute;top:24px;right:28px;font-size:72px;font-weight:900;letter-spacing:-.05em;background:linear-gradient(135deg,rgba(123,47,255,.08),rgba(0,229,255,.06));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.svc-title{font-size:24px;font-weight:900;letter-spacing:-.03em;margin-bottom:14px;line-height:1.2;background:linear-gradient(135deg,#fff,var(--violet3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 16px rgba(123,47,255,.3))}
+.svc-desc{font-size:13px;font-weight:400;line-height:1.8;color:rgba(232,224,255,.55);margin-bottom:28px}
+.tag-row{display:flex;flex-wrap:wrap;gap:8px}
+.t-tag{padding:5px 12px;border-radius:100px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan2);transition:all .3s}
+.t-tag:hover{background:rgba(0,229,255,.14);border-color:rgba(0,229,255,.4);box-shadow:0 0 12px rgba(0,229,255,.2)}
+
+/* PROCESS */
+.process-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:72px;position:relative}
+.process-flow::before{content:'';position:absolute;top:36px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--violet),var(--cyan),var(--violet),transparent);filter:blur(1px)}
+.p-step{padding:24px;text-align:center;position:relative}
+.p-dot-wrap{display:flex;justify-content:center;margin-bottom:24px}
+.p-dot{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(123,47,255,.2),rgba(0,229,255,.15));border:1.5px solid rgba(123,47,255,.4);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 30px rgba(123,47,255,.2),0 8px 24px rgba(0,0,0,.4)}
+.p-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(0,229,255,.15)}
+.p-dot-n{font-size:22px;font-weight:900;letter-spacing:-.03em;background:linear-gradient(135deg,var(--violet2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.p-title{font-size:18px;font-weight:900;letter-spacing:-.02em;margin-bottom:10px;background:linear-gradient(135deg,#fff,var(--violet3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 12px rgba(123,47,255,.3))}
+.p-desc{font-size:12px;font-weight:400;color:var(--muted);line-height:1.7}
+
+/* SKILLS */
+.skills-layout{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start;margin-top:72px}
+.skill-item{margin-bottom:28px}
+.skill-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.skill-name{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--off);text-shadow:0 2px 8px rgba(123,47,255,.3)}
+.skill-val{font-size:20px;font-weight:900;letter-spacing:-.03em;background:linear-gradient(135deg,var(--violet2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(0,229,255,.3))}
+.skill-track{height:4px;background:rgba(123,47,255,.12);border-radius:100px;overflow:hidden}
+.skill-bar{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--violet),var(--cyan));box-shadow:0 0 16px rgba(0,229,255,.4);transition:width 1.5s cubic-bezier(.23,1,.32,1);width:0}
+.sw-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sw{padding:22px 24px;border-radius:18px;background:linear-gradient(135deg,rgba(123,47,255,.08),rgba(0,229,255,.04));border:1px solid rgba(123,47,255,.2);transition:all .35s}
+.sw:hover{transform:translateY(-4px);border-color:rgba(0,229,255,.35);box-shadow:0 12px 36px rgba(0,0,0,.3),0 0 20px rgba(123,47,255,.1)}
+.sw-n{font-size:14px;font-weight:900;letter-spacing:-.02em;margin-bottom:4px;text-shadow:0 2px 12px rgba(123,47,255,.4)}
+.sw-l{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:linear-gradient(135deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* TESTIMONIALS */
+.test-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:64px}
+.test-c{padding:44px;border-radius:24px;background:linear-gradient(135deg,rgba(123,47,255,.07),rgba(0,229,255,.04));border:1px solid rgba(123,47,255,.2);position:relative;overflow:hidden;transition:all .4s}
+.test-c::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--violet),var(--cyan),transparent)}
+.test-c:hover{transform:translateY(-6px);border-color:rgba(0,229,255,.3);box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.test-glow{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(123,47,255,.1),transparent 70%);top:-80px;right:-80px;filter:blur(30px)}
+.q-mark{position:absolute;top:20px;left:36px;font-size:80px;font-weight:900;line-height:1;background:linear-gradient(135deg,rgba(123,47,255,.2),rgba(0,229,255,.15));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.test-txt{font-size:17px;font-weight:400;line-height:1.75;color:rgba(232,224,255,.75);margin-bottom:32px;font-style:italic;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.test-auth{display:flex;align-items:center;gap:16px}
+.t-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--cyan2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 4px 16px rgba(123,47,255,.4)}
+.t-nm{font-size:13px;font-weight:700;text-shadow:0 2px 8px rgba(123,47,255,.3)}
+.t-rl{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.stars{display:flex;gap:4px;position:absolute;top:28px;right:36px}
+.s5{width:12px;height:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 4px rgba(255,215,0,.5))}
+
+/* CLIENTS */
+.clients-s{border-top:1px solid var(--border);background:linear-gradient(180deg,rgba(123,47,255,.03),transparent);text-align:center;padding:80px 56px;position:relative;z-index:10}
+.cl-label{font-size:10px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--dimmed);margin-bottom:48px}
+.cl-row{display:flex;justify-content:center;gap:56px;flex-wrap:wrap;align-items:center}
+.cl{font-size:18px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:rgba(139,128,176,.2);transition:all .35s}
+.cl:hover{background:linear-gradient(135deg,var(--violet2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 12px rgba(123,47,255,.4))}
+
+/* AWARDS */
+.aw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:64px}
+.aw-card{padding:32px;border-radius:20px;background:linear-gradient(135deg,rgba(123,47,255,.08),rgba(0,229,255,.04));border:1px solid rgba(123,47,255,.2);display:flex;gap:20px;align-items:center;transition:all .35s}
+.aw-card:hover{transform:translateY(-5px);border-color:rgba(0,229,255,.35);box-shadow:0 20px 48px rgba(0,0,0,.4)}
+.aw-icon{width:52px;height:52px;border-radius:16px;flex-shrink:0;background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,165,0,.1));border:1px solid rgba(255,215,0,.25);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,215,0,.1)}
+.aw-icon svg{width:24px;height:24px;stroke:var(--gold);fill:none;stroke-width:1.8;filter:drop-shadow(0 0 6px rgba(255,215,0,.5))}
+.aw-title{font-size:16px;font-weight:900;letter-spacing:-.02em;margin-bottom:4px;text-shadow:0 2px 12px rgba(255,215,0,.2)}
+.aw-sub{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+
+/* CTA */
+.cta-s{text-align:center;padding:140px 56px;background:linear-gradient(180deg,rgba(123,47,255,.05),rgba(0,229,255,.03),rgba(123,47,255,.05));border-top:1px solid var(--border);position:relative;overflow:hidden;z-index:10}
+.cta-orb1{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(123,47,255,.15),transparent 70%);top:-200px;left:-200px;filter:blur(60px)}
+.cta-orb2{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,255,.1),transparent 70%);bottom:-200px;right:-200px;filter:blur(60px)}
+.cta-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 20px;margin-bottom:32px;border-radius:100px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan)}
+.cta-badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 2s infinite}
+.cta-h{font-size:clamp(52px,8vw,110px);font-weight:900;line-height:.95;letter-spacing:-.05em;margin-bottom:24px;position:relative}
+.cta-h .w1{display:block;background:linear-gradient(135deg,#ffffff,var(--violet3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 32px rgba(196,160,255,.4))}
+.cta-h .w2{display:block;background:linear-gradient(135deg,var(--cyan),var(--violet2),var(--rose2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 4px 40px rgba(0,229,255,.4));background-size:200%;animation:shimmer 4s linear infinite}
+.cta-p{font-size:16px;font-weight:400;color:rgba(232,224,255,.5);margin-bottom:20px;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.cta-mail{display:inline-block;margin-bottom:52px;font-size:22px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,var(--violet3),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;border-bottom:1px solid rgba(0,229,255,.3);padding-bottom:6px;filter:drop-shadow(0 2px 20px rgba(0,229,255,.3));transition:filter .3s}
+.cta-mail:hover{filter:drop-shadow(0 4px 30px rgba(0,229,255,.6))}
+.cta-row{display:flex;gap:20px;justify-content:center;margin-bottom:56px}
+.socials{display:flex;gap:28px;justify-content:center}
+.soc{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dimmed);text-decoration:none;transition:all .3s;padding-bottom:4px;border-bottom:1px solid transparent}
+.soc:hover{color:var(--cyan);border-color:rgba(0,229,255,.4);text-shadow:0 0 16px rgba(0,229,255,.5)}
+
+/* FOOTER */
+footer{background:rgba(0,0,0,.6);border-top:1px solid var(--border);padding:28px 56px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(16px);position:relative;z-index:10}
+.f-name{font-size:16px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,var(--violet2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.f-copy{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dimmed)}
+
+/* ANIMATIONS */
+@keyframes slideIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .8s cubic-bezier(.23,1,.32,1),transform .8s cubic-bezier(.23,1,.32,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}
+
+@media(max-width:980px){
+  nav{padding:18px 24px}
+  section{padding:80px 24px}
+  .hero{padding:0 24px;padding-top:100px}
+  .hero-right{display:none}
+  .work-grid,.services-grid,.test-grid,.skills-layout{grid-template-columns:1fr}
+  .work-card:first-child{grid-row:auto;min-height:360px}
+  .process-flow{grid-template-columns:1fr 1fr;gap:32px}
+  .process-flow::before{display:none}
+  .aw-grid{grid-template-columns:1fr}
+  .cta-row{flex-direction:column;align-items:center}
+  footer{flex-direction:column;gap:14px;text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="bg-mesh"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div><div class="orb orb4"></div></div>
+<div class="grid-bg"></div>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">AM Studio</div>
+  <div class="nav-links">
+    <a href="#work">Work</a><a href="#services">Services</a><a href="#skills">Skills</a>
+    <a href="#contact" class="nav-cta">Hire Me</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">Available for Projects · 2025</div>
+  <h1 class="hero-title">
+    <span class="line1">Cinematic</span>
+    <span class="line2">Visual Stories</span>
+    <span class="line3">That Move People</span>
+  </h1>
+  <p class="hero-role">Video Editor &amp; Motion Designer — Mumbai, India</p>
+  <p class="hero-desc">I transform raw footage into <strong>award-winning</strong> brand films, documentaries, and commercial campaigns that captivate audiences worldwide.</p>
+  <div class="hero-actions">
+    <a href="#work" class="btn-primary"><span>View Showreel</span><span class="arrow">▶</span></a>
+    <a href="#contact" class="btn-outline">Start a Project →</a>
+  </div>
+  <div class="hero-right">
+    <div class="stat-pill"><div class="icon icon-v">🎬</div><div><div class="num">120+</div><div class="lbl">Projects Delivered</div></div></div>
+    <div class="stat-pill"><div class="icon icon-c">🏆</div><div><div class="num">12</div><div class="lbl">Industry Awards</div></div></div>
+    <div class="stat-pill"><div class="icon icon-r">▶️</div><div><div class="num">500M+</div><div class="lbl">Total Video Views</div></div></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee">
+    <div class="m-item"><span class="m-num">120+</span> Projects Delivered <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">8</span> Years Experience <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">40+</span> Brand Clients <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">12</span> Awards Won <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">500M+</span> Video Views <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">4K</span> HDR Delivery <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">120+</span> Projects Delivered <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">8</span> Years Experience <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">40+</span> Brand Clients <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">12</span> Awards Won <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">500M+</span> Video Views <span class="m-sep"></span></div>
+    <div class="m-item"><span class="m-num">4K</span> HDR Delivery <span class="m-sep"></span></div>
+  </div>
+</div>
+
+<!-- WORK -->
+<section id="work" style="background:linear-gradient(180deg,rgba(123,47,255,.03),transparent)">
+  <div class="s-badge reveal">Selected Work</div>
+  <div class="s-title reveal"><span class="g1">Featured</span> <span class="g2">Projects</span></div>
+  <p class="s-sub reveal">A curated selection of brand films, documentaries and music videos crafted for global audiences.</p>
+  <div class="work-grid">
+    <div class="work-card reveal">
+      <div class="work-visual vf-1">
+        <div class="film-frame"><div class="ff-glow1"></div><div class="ff-glow2"></div><div class="ff-lines"></div><div class="ff-corner tl"></div><div class="ff-corner tr"></div><div class="ff-corner bl"></div><div class="ff-corner br"></div></div>
+        <div class="play-ring"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+        <div class="work-overlay">
+          <div class="work-tag2">Brand Film · 2025</div>
+          <div class="work-name2">Lumière — Luxury<br>Brand Campaign</div>
+          <div class="work-meta2">4K HDR · Color Graded · 3:45 min</div>
+        </div>
+      </div>
+    </div>
+    <div class="work-card reveal reveal-d1">
+      <div class="work-visual vf-2" style="min-height:280px">
+        <div class="film-frame"><div class="ff-glow2" style="background:radial-gradient(circle,rgba(0,229,255,.25),transparent 70%)"></div><div class="ff-lines"></div><div class="ff-corner tl"></div><div class="ff-corner tr"></div><div class="ff-corner bl"></div><div class="ff-corner br"></div></div>
+        <div class="play-ring"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+        <div class="work-overlay">
+          <div class="work-tag2">Documentary · 2024</div>
+          <div class="work-name2">Echoes — Short<br>Documentary Film</div>
+          <div class="work-meta2">DCI 4K · Dolby Vision · 18 min</div>
+        </div>
+      </div>
+    </div>
+    <div class="work-card reveal reveal-d2">
+      <div class="work-visual vf-3" style="min-height:280px">
+        <div class="film-frame"><div class="ff-glow3"></div><div class="ff-lines"></div><div class="ff-corner tl"></div><div class="ff-corner tr"></div><div class="ff-corner bl"></div><div class="ff-corner br"></div></div>
+        <div class="play-ring"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+        <div class="work-overlay">
+          <div class="work-tag2">Music Video · 2024</div>
+          <div class="work-name2">Resonance — Artist<br>Visual Album</div>
+          <div class="work-meta2">4K HDR · 6 Videos · Directed &amp; Edited</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="aw-grid">
+    <div class="aw-card reveal"><div class="aw-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div><div><div class="aw-title">Best Editing — AIFF 2024</div><div class="aw-sub">Asia International Film Festival</div></div></div>
+    <div class="aw-card reveal reveal-d1"><div class="aw-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M6 15l-2 7 8-3 8 3-2-7"/></svg></div><div><div class="aw-title">Gold — Young Guns 2023</div><div class="aw-sub">Motion Design Excellence</div></div></div>
+    <div class="aw-card reveal reveal-d2"><div class="aw-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="aw-title">Vimeo Staff Pick 2024</div><div class="aw-sub">Short Documentary Category</div></div></div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services" class="services-bg">
+  <div class="s-badge reveal">What I Do</div>
+  <div class="s-title reveal"><span class="g1">Creative</span> <span class="g2">Services</span></div>
+  <p class="s-sub reveal">End-to-end post-production services, from assembly cut to final delivery.</p>
+  <div class="services-grid">
+    <div class="svc-card reveal">
+      <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.553A1 1 0 0121 8.382v7.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+      <div class="svc-num">01</div>
+      <div class="svc-title">Cinematic Video Editing</div>
+      <div class="svc-desc">Narrative-driven editing for brand films, documentaries, and short films with precision pacing and story structure.</div>
+      <div class="tag-row"><span class="t-tag">Premiere Pro</span><span class="t-tag">DaVinci</span><span class="t-tag">Final Cut</span></div>
+    </div>
+    <div class="svc-card reveal reveal-d1">
+      <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="svc-num">02</div>
+      <div class="svc-title">Motion Graphics &amp; VFX</div>
+      <div class="svc-desc">Kinetic typography, logo animations, 2D/3D compositing, and visual effects that elevate your production value.</div>
+      <div class="tag-row"><span class="t-tag">After Effects</span><span class="t-tag">Cinema 4D</span><span class="t-tag">Mocha</span></div>
+    </div>
+    <div class="svc-card reveal reveal-d2">
+      <div class="svc-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M20.188 10.934A9 9 0 113.812 13.066"/><path d="M12 8V3m0 0l-2 2m2-2l2 2"/></svg></div>
+      <div class="svc-num">03</div>
+      <div class="svc-title">Color Grading &amp; Finishing</div>
+      <div class="svc-desc">Signature cinematic color grades, LUT creation, and complete post-production finishing for theatrical delivery.</div>
+      <div class="tag-row"><span class="t-tag">DaVinci Resolve</span><span class="t-tag">Lumetri</span><span class="t-tag">HDR</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section style="background:linear-gradient(180deg,transparent,rgba(123,47,255,.04),transparent)">
+  <div class="s-badge reveal">How I Work</div>
+  <div class="s-title reveal"><span class="g1">The</span> <span class="g2">Process</span></div>
+  <div class="process-flow">
+    <div class="p-step reveal"><div class="p-dot-wrap"><div class="p-dot"><span class="p-dot-n">01</span></div></div><div class="p-title">Discovery</div><div class="p-desc">Deep dive into your vision, brand identity, audience, and distribution goals to define the creative direction.</div></div>
+    <div class="p-step reveal reveal-d1"><div class="p-dot-wrap"><div class="p-dot"><span class="p-dot-n">02</span></div></div><div class="p-title">Assembly</div><div class="p-desc">Building narrative architecture — selecting the finest moments and arranging them with intentional rhythm.</div></div>
+    <div class="p-step reveal reveal-d2"><div class="p-dot-wrap"><div class="p-dot"><span class="p-dot-n">03</span></div></div><div class="p-title">Polish</div><div class="p-desc">Color grading, motion graphics, sound design, and music supervision for a fully immersive experience.</div></div>
+    <div class="p-step reveal reveal-d3"><div class="p-dot-wrap"><div class="p-dot"><span class="p-dot-n">04</span></div></div><div class="p-title">Delivery</div><div class="p-desc">Platform-specific exports in all required formats with post-delivery support and revisions included.</div></div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" class="services-bg">
+  <div class="s-badge reveal">Expertise</div>
+  <div class="s-title reveal"><span class="g1">Skills &amp;</span> <span class="g2">Software</span></div>
+  <div class="skills-layout">
+    <div class="reveal">
+      <div class="skill-item"><div class="skill-head"><span class="skill-name">Narrative Editing</span><span class="skill-val">97%</span></div><div class="skill-track"><div class="skill-bar" data-w="97"></div></div></div>
+      <div class="skill-item"><div class="skill-head"><span class="skill-name">Color Grading</span><span class="skill-val">93%</span></div><div class="skill-track"><div class="skill-bar" data-w="93"></div></div></div>
+      <div class="skill-item"><div class="skill-head"><span class="skill-name">Motion Graphics</span><span class="skill-val">88%</span></div><div class="skill-track"><div class="skill-bar" data-w="88"></div></div></div>
+      <div class="skill-item"><div class="skill-head"><span class="skill-name">VFX Compositing</span><span class="skill-val">80%</span></div><div class="skill-track"><div class="skill-bar" data-w="80"></div></div></div>
+      <div class="skill-item"><div class="skill-head"><span class="skill-name">Sound Design</span><span class="skill-val">85%</span></div><div class="skill-track"><div class="skill-bar" data-w="85"></div></div></div>
+    </div>
+    <div class="sw-grid reveal">
+      <div class="sw"><div class="sw-n">Premiere Pro</div><div class="sw-l">Expert</div></div>
+      <div class="sw"><div class="sw-n">After Effects</div><div class="sw-l">Expert</div></div>
+      <div class="sw"><div class="sw-n">DaVinci Resolve</div><div class="sw-l">Expert</div></div>
+      <div class="sw"><div class="sw-n">Cinema 4D</div><div class="sw-l">Advanced</div></div>
+      <div class="sw"><div class="sw-n">Final Cut Pro</div><div class="sw-l">Advanced</div></div>
+      <div class="sw"><div class="sw-n">Pro Tools</div><div class="sw-l">Intermediate</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="s-badge reveal">Client Words</div>
+  <div class="s-title reveal"><span class="g1">What They</span> <span class="g2">Say</span></div>
+  <div class="test-grid">
+    <div class="test-c reveal"><div class="test-glow"></div><div class="stars"><div class="s5"></div><div class="s5"></div><div class="s5"></div><div class="s5"></div><div class="s5"></div></div><div class="q-mark">"</div><div class="test-txt">Alex has an extraordinary eye for pacing. The brand film exceeded every expectation — cinematic, emotional, and perfectly on-brand. Our campaign saw 3× the engagement we projected.</div><div class="test-auth"><div class="t-av">SR</div><div><div class="t-nm">Shreya Reddy</div><div class="t-rl">CMO, Lumière India</div></div></div></div>
+    <div class="test-c reveal reveal-d1"><div class="test-glow" style="background:radial-gradient(circle,rgba(0,229,255,.1),transparent 70%)"></div><div class="stars"><div class="s5"></div><div class="s5"></div><div class="s5"></div><div class="s5"></div><div class="s5"></div></div><div class="q-mark">"</div><div class="test-txt">Working with Alex felt like a true creative collaboration. He understood the soul of the music and transformed raw footage into something that genuinely moved people. An absolute artist.</div><div class="test-auth"><div class="t-av" style="background:linear-gradient(135deg,var(--cyan2),var(--rose))">KP</div><div><div class="t-nm">Kabir Patel</div><div class="t-rl">Recording Artist, Sony Music</div></div></div></div>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<div class="clients-s">
+  <div class="cl-label reveal">Trusted by Industry Leaders</div>
+  <div class="cl-row reveal"><span class="cl">Adidas</span><span class="cl">Netflix</span><span class="cl">Zara</span><span class="cl">Sony Music</span><span class="cl">Unilever</span><span class="cl">Vogue</span></div>
+</div>
+
+<!-- CTA -->
+<section id="contact" class="cta-s">
+  <div class="cta-orb1"></div><div class="cta-orb2"></div>
+  <div class="cta-badge reveal">Open to New Projects</div>
+  <h2 class="cta-h reveal"><span class="w1">Let's Build</span><span class="w2">Something Epic</span></h2>
+  <p class="cta-p reveal">Available for brand films, documentaries, music videos &amp; long-term retainers.</p>
+  <a href="mailto:hello@alexmercer.in" class="cta-mail reveal">hello@alexmercer.in</a>
+  <div class="cta-row reveal">
+    <a href="#work" class="btn-primary"><span>View Portfolio</span><span class="arrow">▶</span></a>
+    <a href="mailto:hello@alexmercer.in" class="btn-outline">Send a Brief →</a>
+  </div>
+  <div class="socials reveal"><a href="#" class="soc">Vimeo</a><a href="#" class="soc">Instagram</a><a href="#" class="soc">LinkedIn</a><a href="#" class="soc">Behance</a></div>
+</section>
+
+<footer>
+  <div class="f-name">Alex Mercer Studio</div>
+  <div class="f-copy">© 2025 · All Rights Reserved</div>
+</footer>
+
+<script>
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function a(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(a)})();
+document.querySelectorAll('a,button,.work-card,.svc-card,.sw,.aw-card,.test-c').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.transform='translate(-50%,-50%) scale(2.5)';ring.style.transform='translate(-50%,-50%) scale(1.6)';ring.style.borderColor='rgba(0,229,255,.8)'});
+  el.addEventListener('mouseleave',()=>{cur.style.transform='translate(-50%,-50%) scale(1)';ring.style.transform='translate(-50%,-50%) scale(1)';ring.style.borderColor='rgba(0,229,255,.5)'});
+});
+window.addEventListener('scroll',()=>{document.getElementById('nav').style.background=window.scrollY>60?'rgba(8,0,20,.92)':'rgba(10,0,21,.7)'});
+const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');obs.unobserve(x.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+const skObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.querySelectorAll('.skill-bar').forEach(b=>{b.style.width=b.dataset.w+'%'});skObs.unobserve(x.target)}}),{threshold:.3});
+document.querySelectorAll('.skills-layout').forEach(el=>skObs.observe(el));
+(function(){
+  const c=document.createElement('canvas');
+  c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.4';
+  document.body.appendChild(c);
+  const ctx=c.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,c:Math.random()>.5?'rgba(123,47,255,':'rgba(0,229,255,'});
+  (function draw(){ctx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c+(Math.random()*.5+.2)+')';ctx.fill()});requestAnimationFrame(draw)})();
+})();
+</script>
+</body>
+</html>
